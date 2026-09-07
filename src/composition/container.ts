@@ -4,10 +4,10 @@ import { SearchMarkets } from "@/modules/markets/application/use-cases/search-ma
 import { GetMarketDetails } from "@/modules/markets/application/use-cases/get-market-details";
 import { PreviewOrder } from "@/modules/trading/application/use-cases/preview-order";
 import { PlaceOrder } from "@/modules/trading/application/use-cases/place-order";
-import { RecommendMarket } from "@/modules/recommendations/application/use-cases/recommend-market";
+import { PredictMarket } from "@/modules/predictions/application/use-cases/predict-market";
 import { PolymarketUsSdkMarketCatalog } from "@/modules/markets/adapters/outbound/polymarket-us/polymarket-us-sdk-market-catalog";
 import { PolymarketUsSdkTradingGateway } from "@/modules/trading/adapters/outbound/polymarket-us/polymarket-us-sdk-trading-gateway";
-import { OpenAiOrAnthropicPredictionAssistant } from "@/modules/recommendations/adapters/outbound/llm/open-ai-or-anthropic-prediction-assistant";
+import { OpenAiOrAnthropicPredictionAssistant } from "@/modules/predictions/adapters/outbound/llm/open-ai-or-anthropic-prediction-assistant";
 
 export function createContainer() {
   const settings = loadSettings();
@@ -22,7 +22,7 @@ export function createContainer() {
     getMarketDetails: new GetMarketDetails(catalog),
     previewOrder: new PreviewOrder(trading),
     placeOrder: new PlaceOrder(trading),
-    recommendMarket: new RecommendMarket(catalog, assistant),
+    predictMarket: new PredictMarket(catalog, assistant),
   };
 }
 

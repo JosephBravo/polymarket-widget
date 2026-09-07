@@ -9,7 +9,7 @@ import {
   parseQuantity,
 } from "@/modules/trading/domain/order";
 import { SearchMarkets } from "@/modules/markets/application/use-cases/search-markets";
-import { RecommendMarket } from "@/modules/recommendations/application/use-cases/recommend-market";
+import { PredictMarket } from "@/modules/predictions/application/use-cases/predict-market";
 import type { MarketCatalog } from "@/modules/markets/application/ports/market-catalog";
 import type { Market } from "@/modules/markets/domain/market";
 
@@ -48,7 +48,7 @@ describe("search markets use case", () => {
   });
 });
 
-describe("recommend market use case", () => {
+describe("predict market use case", () => {
   it("asks the assistant using catalog candidates", async () => {
     const market: Market = {
       slug: parseMarketSlug("btc-100k-2025"),
@@ -63,7 +63,7 @@ describe("recommend market use case", () => {
       getBook: vi.fn(),
     };
     const assistant = {
-      recommend: vi.fn().mockResolvedValue({
+      predict: vi.fn().mockResolvedValue({
         marketSlug: market.slug,
         outcome: OutcomeSide.YES,
         confidence: 0.8,
@@ -71,9 +71,9 @@ describe("recommend market use case", () => {
         suggestedLimitPrice: "0.55",
       }),
     };
-    const useCase = new RecommendMarket(catalog, assistant);
+    const useCase = new PredictMarket(catalog, assistant);
     const result = await useCase.execute({ prompt: "bitcoin upside" });
     expect(catalog.search).toHaveBeenCalledWith("bitcoin upside", 8);
-    expect(result.recommendation.outcome).toBe("YES");
+    expect(result.prediction.outcome).toBe("YES");
   });
 });

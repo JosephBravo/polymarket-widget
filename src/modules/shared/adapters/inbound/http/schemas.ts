@@ -12,7 +12,7 @@ export const betOrderBodySchema = z.object({
   limitPrice: z.string().min(1),
 });
 
-export const recommendationBodySchema = z.object({
+export const predictionBodySchema = z.object({
   prompt: z.string().min(3),
   query: z.string().optional(),
 });

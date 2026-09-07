@@ -1,6 +1,6 @@
 # Polymarket Widget
 
-Single-page widget for [Polymarket US](https://docs.polymarket.us/getting-started/quickstart): search markets, inspect the order book, place a YES/NO limit bet, and optionally ask an LLM to recommend a market and outcome.
+Single-page widget for [Polymarket US](https://docs.polymarket.us/getting-started/quickstart): search markets, inspect the order book, place a YES/NO limit bet, and optionally ask an LLM to predict a market and outcome.
 
 This repository is the deliverable for a 48-hour challenge. The UI is a Next.js page. Domain rules, use cases, and outbound I/O follow a compact hexagonal layout inspired by a production payouts module (pure domain → application ports → adapters).
 
@@ -23,7 +23,7 @@ Public market data does not need credentials. Placing a bet needs Polymarket US 
 | **Tailwind CSS** | Responsive layout. |
 | **Vitest + MSW** | Unit tests (mocked ports) and HTTP-contract integration tests. |
 | **[Polymarket US](https://docs.polymarket.us/getting-started/quickstart)** | Market search, order book, preview, and place order via [`polymarket-us`](https://docs.polymarket.us/api-reference/sdks/typescript/quickstart). |
-| **OpenAI / Anthropic** | AI market and outcome recommendations (OpenAI first, Anthropic if OpenAI is unset). |
+| **OpenAI / Anthropic** | AI market and outcome predictions (OpenAI first, Anthropic if OpenAI is unset). |
 
 ## Architecture
 
@@ -46,7 +46,7 @@ Widget UI  →  Next.js route handlers  →  use cases  →  ports
 | Outbound | `src/modules/*/adapters/outbound` |
 | Composition | `src/composition/container.ts` |
 
-Bounded contexts: `markets` (search + book), `trading` (preview + place), `recommendations` (AI).
+Bounded contexts: `markets` (search + book), `trading` (preview + place), `predictions` (AI).
 
 ## Credentials (environment variables only)
 
@@ -71,7 +71,7 @@ ANTHROPIC_API_KEY=
 
 Create Polymarket US keys at [polymarket.us/developer](https://polymarket.us/developer) after identity verification in the US app. Keys are shown once.
 
-If trading keys are missing, search and AI still work; place/preview return `TRADING_CREDENTIALS_MISSING`. If both LLM keys are missing, recommendations return `AI_CREDENTIALS_MISSING`.
+If trading keys are missing, search and AI still work; place/preview return `TRADING_CREDENTIALS_MISSING`. If both LLM keys are missing, predictions return `AI_CREDENTIALS_MISSING`.
 
 `GET /api/status` only returns booleans (`tradingConfigured`, `aiConfigured`). It never echoes secrets.
 
@@ -104,7 +104,7 @@ npm run build     # production build
   2. Load market + book
   3. Preview order
   4. Place order (success + missing credentials)
-  5. AI recommendation (OpenAI path, Anthropic fallback, missing credentials)
+  5. AI prediction (OpenAI path, Anthropic fallback, missing credentials)
 
 CI never uses live keys. Trading success tests inject a synthetic 32-byte secret so the SDK can sign; MSW never forwards that request.
 
@@ -117,7 +117,7 @@ CI never uses live keys. Trading success tests inject a synthetic 32-byte secret
 | `GET` | `/api/markets/[slug]` | none |
 | `POST` | `/api/orders/preview` | Polymarket keys |
 | `POST` | `/api/orders` | Polymarket keys |
-| `POST` | `/api/recommendations` | OpenAI or Anthropic key |
+| `POST` | `/api/predictions` | OpenAI or Anthropic key |
 
 Place-bet body:
 

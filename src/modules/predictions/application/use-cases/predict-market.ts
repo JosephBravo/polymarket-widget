@@ -1,26 +1,26 @@
 import { ValidationError } from "@/modules/shared/domain/errors";
 import type { Market } from "@/modules/markets/domain/market";
-import type { Recommendation } from "@/modules/recommendations/domain/recommendation";
+import type { Prediction } from "@/modules/predictions/domain/prediction";
 import type { MarketCatalog } from "@/modules/markets/application/ports/market-catalog";
-import type { PredictionAssistant } from "@/modules/recommendations/application/ports/prediction-assistant";
+import type { PredictionAssistant } from "@/modules/predictions/application/ports/prediction-assistant";
 
-export type RecommendMarketRequest = {
+export type PredictMarketRequest = {
   prompt: string;
   query?: string;
 };
 
-export type RecommendMarketResponse = {
-  recommendation: Recommendation;
+export type PredictMarketResponse = {
+  prediction: Prediction;
   candidates: readonly Market[];
 };
 
-export class RecommendMarket {
+export class PredictMarket {
   constructor(
     private readonly catalog: MarketCatalog,
     private readonly assistant: PredictionAssistant,
   ) {}
 
-  async execute(request: RecommendMarketRequest): Promise<RecommendMarketResponse> {
+  async execute(request: PredictMarketRequest): Promise<PredictMarketResponse> {
     const prompt = request.prompt.trim();
     if (prompt.length < 3) {
       throw new ValidationError("Prompt must be at least 3 characters");
@@ -29,10 +29,10 @@ export class RecommendMarket {
     const query = (request.query ?? prompt).trim();
     const candidates = await this.catalog.search(query, 8);
     if (candidates.length === 0) {
-      throw new ValidationError("No markets found to recommend from. Try a different query.");
+      throw new ValidationError("No markets found to predict from. Try a different query.");
     }
 
-    const recommendation = await this.assistant.recommend({ prompt, candidates });
-    return { recommendation, candidates };
+    const prediction = await this.assistant.predict({ prompt, candidates });
+    return { prediction, candidates };
   }
 }

@@ -3,7 +3,7 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import type { Market } from "@/modules/markets/domain/market";
 import type { OrderBook } from "@/modules/markets/domain/order-book";
-import type { Recommendation } from "@/modules/recommendations/domain/recommendation";
+import type { Prediction } from "@/modules/predictions/domain/prediction";
 import type { OrderPreview, PlacedOrder } from "@/modules/trading/application/ports/trading-gateway";
 import { OutcomeSide } from "@/modules/trading/domain/order";
 import {
@@ -11,7 +11,7 @@ import {
   type MarketDetailsResponse,
   type PlaceResponse,
   type PreviewResponse,
-  type RecommendResponse,
+  type PredictionResponse,
   type SearchResponse,
   type StatusResponse,
 } from "./api-client";
@@ -28,7 +28,7 @@ export function MarketWidget() {
   const [preview, setPreview] = useState<OrderPreview | null>(null);
   const [placed, setPlaced] = useState<PlacedOrder | null>(null);
   const [aiPrompt, setAiPrompt] = useState("");
-  const [recommendation, setRecommendation] = useState<Recommendation | null>(null);
+  const [prediction, setPrediction] = useState<Prediction | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -120,27 +120,27 @@ export function MarketWidget() {
     }
   }, [selected, outcome, quantity, limitPrice]);
 
-  const requestRecommendation = useCallback(async (event: FormEvent) => {
+  const requestPrediction = useCallback(async (event: FormEvent) => {
     event.preventDefault();
     setError(null);
     setBusy("ai");
     try {
-      const data = await apiRequest<RecommendResponse>("/api/recommendations", {
+      const data = await apiRequest<PredictionResponse>("/api/predictions", {
         method: "POST",
         body: JSON.stringify({ prompt: aiPrompt, query: query || undefined }),
       });
-      setRecommendation(data.recommendation);
+      setPrediction(data.prediction);
       setMarkets(data.candidates);
       const match = data.candidates.find(
-        (market) => market.slug === data.recommendation.marketSlug,
+        (market) => market.slug === data.prediction.marketSlug,
       );
       if (match) {
         await selectMarket(match);
-        setOutcome(data.recommendation.outcome);
-        setLimitPrice(data.recommendation.suggestedLimitPrice);
+        setOutcome(data.prediction.outcome);
+        setLimitPrice(data.prediction.suggestedLimitPrice);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Recommendation failed");
+      setError(err instanceof Error ? err.message : "Prediction failed");
     } finally {
       setBusy(null);
     }
@@ -303,9 +303,9 @@ export function MarketWidget() {
 
           <section className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-950 sm:p-5">
             <h3 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">
-              AI assist
+              AI prediction
             </h3>
-            <form onSubmit={requestRecommendation} className="mt-3 flex flex-col gap-3">
+            <form onSubmit={requestPrediction} className="mt-3 flex flex-col gap-3">
               <textarea
                 value={aiPrompt}
                 onChange={(event) => setAiPrompt(event.target.value)}
@@ -318,20 +318,20 @@ export function MarketWidget() {
                 disabled={busy === "ai"}
                 className="h-11 rounded-xl bg-zinc-900 text-sm font-medium text-white disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900"
               >
-                {busy === "ai" ? "Asking AI…" : "Recommend market and outcome"}
+                {busy === "ai" ? "Asking AI…" : "Predict market and outcome"}
               </button>
             </form>
-            {recommendation ? (
+            {prediction ? (
               <div className="mt-4 rounded-xl bg-zinc-50 p-3 text-sm dark:bg-zinc-900">
                 <p className="font-medium">
-                  {recommendation.outcome} on {recommendation.marketSlug} @{" "}
-                  {recommendation.suggestedLimitPrice}
+                  {prediction.outcome} on {prediction.marketSlug} @{" "}
+                  {prediction.suggestedLimitPrice}
                 </p>
                 <p className="mt-1 text-zinc-500">
-                  Confidence {(recommendation.confidence * 100).toFixed(0)}%
+                  Confidence {(prediction.confidence * 100).toFixed(0)}%
                 </p>
                 <p className="mt-2 leading-6 text-zinc-700 dark:text-zinc-300">
-                  {recommendation.rationale}
+                  {prediction.rationale}
                 </p>
               </div>
             ) : null}

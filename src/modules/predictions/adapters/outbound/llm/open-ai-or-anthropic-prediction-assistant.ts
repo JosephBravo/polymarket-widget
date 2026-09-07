@@ -10,13 +10,13 @@ import { parseMarketSlug } from "@/modules/shared/domain/market-slug";
 import { Price } from "@/modules/shared/domain/price";
 import type { Settings } from "@/modules/shared/application/settings";
 import { OutcomeSide } from "@/modules/trading/domain/order";
-import type { Recommendation } from "@/modules/recommendations/domain/recommendation";
+import type { Prediction } from "@/modules/predictions/domain/prediction";
 import type {
   PredictionAssistant,
-  RecommendationContext,
-} from "@/modules/recommendations/application/ports/prediction-assistant";
+  PredictionContext,
+} from "@/modules/predictions/application/ports/prediction-assistant";
 
-const recommendationSchema = z.object({
+const predictionSchema = z.object({
   marketSlug: z.string().min(1),
   outcome: z.enum(["YES", "NO"]),
   confidence: z.number().min(0).max(1),
@@ -27,9 +27,9 @@ const recommendationSchema = z.object({
 export class OpenAiOrAnthropicPredictionAssistant implements PredictionAssistant {
   constructor(private readonly settings: Settings) {}
 
-  async recommend(context: RecommendationContext): Promise<Recommendation> {
+  async predict(context: PredictionContext): Promise<Prediction> {
     const payload = await this.complete(buildPrompt(context));
-    return parseRecommendation(payload, context);
+    return parsePrediction(payload, context);
   }
 
   private async complete(prompt: string): Promise<string> {
@@ -60,7 +60,7 @@ export class OpenAiOrAnthropicPredictionAssistant implements PredictionAssistant
       });
       const content = response.choices[0]?.message.content;
       if (!content) {
-        throw new ExternalServiceError("OpenAI returned an empty recommendation");
+        throw new ExternalServiceError("OpenAI returned an empty prediction");
       }
       return content;
     } catch (error) {
@@ -86,7 +86,7 @@ export class OpenAiOrAnthropicPredictionAssistant implements PredictionAssistant
         .map((block) => block.text)
         .join("\n");
       if (!text) {
-        throw new ExternalServiceError("Anthropic returned an empty recommendation");
+        throw new ExternalServiceError("Anthropic returned an empty prediction");
       }
       return text;
     } catch (error) {
@@ -99,7 +99,7 @@ export class OpenAiOrAnthropicPredictionAssistant implements PredictionAssistant
   }
 }
 
-function buildPrompt(context: RecommendationContext): string {
+function buildPrompt(context: PredictionContext): string {
   const markets = context.candidates
     .map(
       (market) =>
@@ -123,14 +123,11 @@ Return JSON with keys:
 - suggestedLimitPrice (string between 0 and 1, e.g. "0.55")`;
 }
 
-function parseRecommendation(
-  raw: string,
-  context: RecommendationContext,
-): Recommendation {
+function parsePrediction(raw: string, context: PredictionContext): Prediction {
   const json = extractJson(raw);
-  const parsed = recommendationSchema.safeParse(json);
+  const parsed = predictionSchema.safeParse(json);
   if (!parsed.success) {
-    throw new ExternalServiceError("AI returned an invalid recommendation payload");
+    throw new ExternalServiceError("AI returned an invalid prediction payload");
   }
 
   const slug = parseMarketSlug(parsed.data.marketSlug);
