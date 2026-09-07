@@ -291,30 +291,20 @@ export function MarketWidget() {
               </label>
             </div>
             <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-              <button
-                type="button"
-                disabled={!hydrated || selected === null || busy === "preview"}
+              <TradeButton
+                label={busy === "preview" ? "Previewing…" : "Preview"}
+                hydrated={hydrated}
+                blocked={selected === null || busy === "preview"}
                 onClick={() => submitOrder("preview")}
-                className={`h-11 flex-1 rounded-xl border border-zinc-300 text-sm font-medium dark:border-zinc-700 ${
-                  !hydrated || selected === null || busy === "preview"
-                    ? "cursor-not-allowed pointer-events-none opacity-60"
-                    : "cursor-pointer"
-                }`}
-              >
-                {busy === "preview" ? "Previewing…" : "Preview"}
-              </button>
-              <button
-                type="button"
-                disabled={!hydrated || selected === null || busy === "place"}
+                variant="outline"
+              />
+              <TradeButton
+                label={busy === "place" ? "Placing…" : "Place bet"}
+                hydrated={hydrated}
+                blocked={selected === null || busy === "place"}
                 onClick={() => submitOrder("place")}
-                className={`h-11 flex-1 rounded-xl bg-emerald-600 text-sm font-medium text-white ${
-                  !hydrated || selected === null || busy === "place"
-                    ? "cursor-not-allowed pointer-events-none opacity-60"
-                    : "cursor-pointer"
-                }`}
-              >
-                {busy === "place" ? "Placing…" : "Place bet"}
-              </button>
+                variant="primary"
+              />
             </div>
             {preview ? (
               <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
@@ -367,6 +357,48 @@ export function MarketWidget() {
         </div>
       </div>
     </div>
+  );
+}
+
+function TradeButton({
+  label,
+  hydrated,
+  blocked,
+  onClick,
+  variant,
+}: {
+  label: string;
+  hydrated: boolean;
+  blocked: boolean;
+  onClick: () => void;
+  variant: "outline" | "primary";
+}) {
+  const inactive = !hydrated || blocked;
+
+  return (
+    <button
+      type="button"
+      disabled={hydrated && blocked}
+      aria-disabled={inactive}
+      tabIndex={inactive ? -1 : undefined}
+      onClick={() => {
+        if (inactive) {
+          return;
+        }
+        onClick();
+      }}
+      className={`h-11 flex-1 rounded-xl text-sm font-medium ${
+        variant === "primary"
+          ? "bg-emerald-600 text-white"
+          : "border border-zinc-300 dark:border-zinc-700"
+      } ${
+        inactive
+          ? "cursor-not-allowed pointer-events-none opacity-60"
+          : "cursor-pointer"
+      }`}
+    >
+      {label}
+    </button>
   );
 }
 
