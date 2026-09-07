@@ -17,6 +17,7 @@ import {
   type StatusResponse,
 } from "./api-client";
 import { VpnNotice } from "./vpn-notice";
+import { ThemeToggle } from "@/modules/shared/adapters/inbound/ui/theme-toggle";
 
 export function MarketWidget() {
   const [status, setStatus] = useState<StatusResponse | null>(null);
@@ -179,7 +180,10 @@ export function MarketWidget() {
             AI can suggest a market and outcome from your prompt.
           </p>
         </div>
-        <StatusPills status={status} />
+        <div className="flex flex-wrap items-center gap-2">
+          <ThemeToggle />
+          <StatusPills status={status} />
+        </div>
       </header>
 
       {error ? (
