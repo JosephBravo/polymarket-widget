@@ -32,6 +32,11 @@ export function MarketWidget() {
   const [prediction, setPrediction] = useState<Prediction | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
 
   useEffect(() => {
     apiRequest<StatusResponse>("/api/status")
@@ -275,17 +280,25 @@ export function MarketWidget() {
             <div className="mt-4 flex flex-col gap-2 sm:flex-row">
               <button
                 type="button"
-                disabled={!selected || busy === "preview"}
+                disabled={hydrated && (selected === null || busy === "preview")}
                 onClick={() => submitOrder("preview")}
-                className="h-11 flex-1 rounded-xl border border-zinc-300 text-sm font-medium disabled:opacity-60 dark:border-zinc-700"
+                className={`h-11 flex-1 rounded-xl border border-zinc-300 text-sm font-medium dark:border-zinc-700 ${
+                  selected === null || busy === "preview"
+                    ? "pointer-events-none opacity-60"
+                    : ""
+                }`}
               >
                 {busy === "preview" ? "Previewing…" : "Preview"}
               </button>
               <button
                 type="button"
-                disabled={!selected || busy === "place"}
+                disabled={hydrated && (selected === null || busy === "place")}
                 onClick={() => submitOrder("place")}
-                className="h-11 flex-1 rounded-xl bg-emerald-600 text-sm font-medium text-white disabled:opacity-60"
+                className={`h-11 flex-1 rounded-xl bg-emerald-600 text-sm font-medium text-white ${
+                  selected === null || busy === "place"
+                    ? "pointer-events-none opacity-60"
+                    : ""
+                }`}
               >
                 {busy === "place" ? "Placing…" : "Place bet"}
               </button>

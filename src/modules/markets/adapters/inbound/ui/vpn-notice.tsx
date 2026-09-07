@@ -5,9 +5,10 @@ import { useEffect, useState } from "react";
 const AUTO_DISMISS_MS = 8000;
 
 export function VpnNotice() {
-  const [visible, setVisible] = useState(true);
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
+    setVisible(true);
     const timer = window.setTimeout(() => setVisible(false), AUTO_DISMISS_MS);
     return () => window.clearTimeout(timer);
   }, []);
