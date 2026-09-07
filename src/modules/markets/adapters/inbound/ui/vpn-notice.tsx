@@ -37,7 +37,7 @@ export function VpnNotice() {
         <button
           type="button"
           onClick={() => setVisible(false)}
-          className="shrink-0 rounded-lg px-2 py-1 text-xs font-medium text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+          className="shrink-0 cursor-pointer rounded-lg px-2 py-1 text-xs font-medium text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
         >
           Dismiss
         </button>

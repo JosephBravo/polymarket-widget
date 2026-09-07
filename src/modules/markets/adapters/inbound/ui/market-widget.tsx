@@ -192,7 +192,7 @@ export function MarketWidget() {
             <button
               type="submit"
               disabled={busy === "search"}
-              className="h-11 shrink-0 rounded-xl bg-zinc-900 px-4 text-sm font-medium text-white disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900"
+              className="h-11 shrink-0 cursor-pointer rounded-xl bg-zinc-900 px-4 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900"
             >
               {busy === "search" ? "Searching…" : "Search"}
             </button>
@@ -209,7 +209,7 @@ export function MarketWidget() {
                   key={market.slug}
                   type="button"
                   onClick={() => selectMarket(market)}
-                  className={`rounded-xl border px-3 py-3 text-left transition ${
+                  className={`cursor-pointer rounded-xl border px-3 py-3 text-left transition ${
                     selected?.slug === market.slug
                       ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40"
                       : "border-zinc-200 hover:border-zinc-400 dark:border-zinc-800"
@@ -284,8 +284,8 @@ export function MarketWidget() {
                 onClick={() => submitOrder("preview")}
                 className={`h-11 flex-1 rounded-xl border border-zinc-300 text-sm font-medium dark:border-zinc-700 ${
                   selected === null || busy === "preview"
-                    ? "pointer-events-none opacity-60"
-                    : ""
+                    ? "cursor-not-allowed pointer-events-none opacity-60"
+                    : "cursor-pointer"
                 }`}
               >
                 {busy === "preview" ? "Previewing…" : "Preview"}
@@ -296,8 +296,8 @@ export function MarketWidget() {
                 onClick={() => submitOrder("place")}
                 className={`h-11 flex-1 rounded-xl bg-emerald-600 text-sm font-medium text-white ${
                   selected === null || busy === "place"
-                    ? "pointer-events-none opacity-60"
-                    : ""
+                    ? "cursor-not-allowed pointer-events-none opacity-60"
+                    : "cursor-pointer"
                 }`}
               >
                 {busy === "place" ? "Placing…" : "Place bet"}
@@ -331,7 +331,7 @@ export function MarketWidget() {
               <button
                 type="submit"
                 disabled={busy === "ai"}
-                className="h-11 rounded-xl bg-zinc-900 text-sm font-medium text-white disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900"
+                className="h-11 cursor-pointer rounded-xl bg-zinc-900 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900"
               >
                 {busy === "ai" ? "Asking AI…" : "Predict market and outcome"}
               </button>
@@ -400,7 +400,7 @@ function OutcomeButton({
     <button
       type="button"
       onClick={onClick}
-      className={`h-11 rounded-xl border text-sm font-semibold ${
+      className={`h-11 cursor-pointer rounded-xl border text-sm font-semibold ${
         active ? activeClass : "border-zinc-300 dark:border-zinc-700"
       }`}
     >
