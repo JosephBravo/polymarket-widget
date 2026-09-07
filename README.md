@@ -13,22 +13,17 @@ This repository is the deliverable for a 48-hour challenge. The UI is a Next.js 
 
 Public market data does not need credentials. Placing a bet needs Polymarket US API keys. AI assist needs an OpenAI or Anthropic key.
 
-## Stack (only what the challenge needs)
+## Stack
 
-| Choice | Why it is here |
-|--------|----------------|
-| **TypeScript** | Official `polymarket-us` SDK is typed; ports stay explicit. |
-| **React** | Required for the widget UI. |
-| **Next.js App Router** | One page plus route handlers so secrets never reach the browser. |
-| **Tailwind CSS** | Responsive layout without a design system. |
+| Technology | Role |
+|------------|------|
+| **TypeScript** | Typed domain, ports, and the official `polymarket-us` SDK. |
+| **React** | Widget UI. |
+| **Next.js App Router** | Single page plus route handlers so secrets stay on the server. |
+| **Tailwind CSS** | Responsive layout. |
 | **Vitest + MSW** | Unit tests (mocked ports) and HTTP-contract integration tests. |
-
-Not used: Python/FastAPI (the TypeScript SDK already covers search, book, preview, and orders), wallet/CLOB (that is the global Polymarket product), WebSockets, deposits, or KYC UI.
-
-**APIs**
-
-- Used: [Polymarket US](https://docs.polymarket.us/getting-started/quickstart) via [`polymarket-us`](https://docs.polymarket.us/api-reference/sdks/typescript/quickstart).
-- Not used: [global Polymarket CLOB](https://docs.polymarket.com/getting-started/api) (wallet L1/L2 auth, different product).
+| **[Polymarket US](https://docs.polymarket.us/getting-started/quickstart)** | Market search, order book, preview, and place order via [`polymarket-us`](https://docs.polymarket.us/api-reference/sdks/typescript/quickstart). |
+| **OpenAI / Anthropic** | AI market and outcome recommendations (OpenAI first, Anthropic if OpenAI is unset). |
 
 ## Architecture
 
