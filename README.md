@@ -2,8 +2,6 @@
 
 Single-page widget for [Polymarket US](https://docs.polymarket.us/getting-started/quickstart): search markets, inspect the order book, place a YES/NO limit bet, and optionally ask an LLM to predict a market and outcome.
 
-This repository is the deliverable for a 48-hour challenge. The UI is a Next.js page. Domain rules, use cases, and outbound I/O follow a compact hexagonal layout inspired by a production payouts module (pure domain → application ports → adapters).
-
 ## What you can do
 
 1. Search Polymarket US markets (or load active markets with an empty query).
