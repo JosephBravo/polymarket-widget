@@ -1,5 +1,5 @@
 import type { MarketSlug } from "@/modules/shared/domain/market-slug";
-import type { OutcomeSide } from "@/modules/trading/domain/order";
+import type { OutcomeSide } from "@/modules/shared/domain/outcome";
 
 export type Prediction = {
   marketSlug: MarketSlug;

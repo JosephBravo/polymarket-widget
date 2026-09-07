@@ -9,7 +9,9 @@ import { PolymarketUsSdkMarketCatalog } from "@/modules/markets/adapters/outboun
 import { PolymarketUsSdkTradingGateway } from "@/modules/trading/adapters/outbound/polymarket-us/polymarket-us-sdk-trading-gateway";
 import { OpenAiOrAnthropicPredictionAssistant } from "@/modules/predictions/adapters/outbound/llm/open-ai-or-anthropic-prediction-assistant";
 
-export function createContainer() {
+let instance: AppContainer | undefined;
+
+export function createContainer(): AppContainer {
   const settings = loadSettings();
   const publicClient = new PolymarketUS();
   const catalog = new PolymarketUsSdkMarketCatalog(publicClient);
@@ -26,4 +28,22 @@ export function createContainer() {
   };
 }
 
-export type AppContainer = ReturnType<typeof createContainer>;
+export function getContainer(): AppContainer {
+  if (!instance) {
+    instance = createContainer();
+  }
+  return instance;
+}
+
+export function resetContainer(): void {
+  instance = undefined;
+}
+
+export type AppContainer = {
+  settings: ReturnType<typeof loadSettings>;
+  searchMarkets: SearchMarkets;
+  getMarketDetails: GetMarketDetails;
+  previewOrder: PreviewOrder;
+  placeOrder: PlaceOrder;
+  predictMarket: PredictMarket;
+};

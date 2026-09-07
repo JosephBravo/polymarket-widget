@@ -9,7 +9,7 @@ import {
 import { parseMarketSlug } from "@/modules/shared/domain/market-slug";
 import { Price } from "@/modules/shared/domain/price";
 import type { Settings } from "@/modules/shared/application/settings";
-import { OutcomeSide } from "@/modules/trading/domain/order";
+import { OutcomeSide } from "@/modules/shared/domain/outcome";
 import type { Prediction } from "@/modules/predictions/domain/prediction";
 import type {
   PredictionAssistant,

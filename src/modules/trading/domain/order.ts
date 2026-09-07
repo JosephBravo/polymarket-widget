@@ -1,6 +1,14 @@
 import type { MarketSlug } from "@/modules/shared/domain/market-slug";
 import type { Price } from "@/modules/shared/domain/price";
 import { ValidationError } from "@/modules/shared/domain/errors";
+import { parseMarketSlug } from "@/modules/shared/domain/market-slug";
+import { Price as PriceVo } from "@/modules/shared/domain/price";
+import {
+  OutcomeSide,
+  type OutcomeSide as OutcomeSideType,
+} from "@/modules/shared/domain/outcome";
+
+export { OutcomeSide };
 
 export const OrderIntent = {
   BUY_LONG: "BUY_LONG",
@@ -9,18 +17,11 @@ export const OrderIntent = {
 
 export type OrderIntent = (typeof OrderIntent)[keyof typeof OrderIntent];
 
-export const OutcomeSide = {
-  YES: "YES",
-  NO: "NO",
-} as const;
-
-export type OutcomeSide = (typeof OutcomeSide)[keyof typeof OutcomeSide];
-
-export function intentFromOutcome(side: OutcomeSide): OrderIntent {
+export function intentFromOutcome(side: OutcomeSideType): OrderIntent {
   return side === OutcomeSide.YES ? OrderIntent.BUY_LONG : OrderIntent.BUY_SHORT;
 }
 
-export function outcomeFromIntent(intent: OrderIntent): OutcomeSide {
+export function outcomeFromIntent(intent: OrderIntent): OutcomeSideType {
   return intent === OrderIntent.BUY_LONG ? OutcomeSide.YES : OutcomeSide.NO;
 }
 
@@ -31,9 +32,25 @@ export type BetOrder = {
   limitPrice: Price;
 };
 
+export type BetOrderRequest = {
+  marketSlug: string;
+  outcome: OutcomeSideType;
+  quantity: number;
+  limitPrice: string;
+};
+
 export function parseQuantity(value: number): number {
   if (!Number.isInteger(value) || value < 1) {
     throw new ValidationError("Quantity must be a whole number of at least 1");
   }
   return value;
+}
+
+export function betOrderFromRequest(request: BetOrderRequest): BetOrder {
+  return {
+    marketSlug: parseMarketSlug(request.marketSlug),
+    intent: intentFromOutcome(request.outcome),
+    quantity: parseQuantity(request.quantity),
+    limitPrice: PriceVo.parse(request.limitPrice),
+  };
 }

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { ValidationError } from "@/modules/shared/domain/errors";
 import { jsonError } from "@/modules/shared/adapters/inbound/http/json-error";
 import { searchQuerySchema } from "@/modules/shared/adapters/inbound/http/schemas";
-import { createContainer } from "@/composition/container";
+import { getContainer } from "@/composition/container";
 
 export async function GET(request: Request) {
   try {
@@ -16,7 +16,7 @@ export async function GET(request: Request) {
       throw new ValidationError("Invalid search parameters");
     }
 
-    const { searchMarkets } = createContainer();
+    const { searchMarkets } = getContainer();
     const markets = await searchMarkets.execute({
       query: parsed.data.q,
       limit: parsed.data.limit,

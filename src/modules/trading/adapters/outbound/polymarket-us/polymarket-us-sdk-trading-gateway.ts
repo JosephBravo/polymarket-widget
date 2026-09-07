@@ -1,6 +1,9 @@
 import { PolymarketUS } from "polymarket-us";
-import { TradingCredentialsMissingError } from "@/modules/shared/domain/errors";
-import { ExternalServiceError } from "@/modules/shared/domain/errors";
+import {
+  AppError,
+  ExternalServiceError,
+  TradingCredentialsMissingError,
+} from "@/modules/shared/domain/errors";
 import type { Settings } from "@/modules/shared/application/settings";
 import type { BetOrder } from "@/modules/trading/domain/order";
 import type {
@@ -15,6 +18,8 @@ const SDK_INTENT = {
 } as const;
 
 export class PolymarketUsSdkTradingGateway implements TradingGateway {
+  private client: PolymarketUS | undefined;
+
   constructor(private readonly settings: Settings) {}
 
   async preview(order: BetOrder): Promise<OrderPreview> {
@@ -57,10 +62,13 @@ export class PolymarketUsSdkTradingGateway implements TradingGateway {
     if (!this.settings.hasTradingCredentials) {
       throw new TradingCredentialsMissingError();
     }
-    return new PolymarketUS({
-      keyId: this.settings.polymarketKeyId,
-      secretKey: this.settings.polymarketSecretKey,
-    });
+    if (!this.client) {
+      this.client = new PolymarketUS({
+        keyId: this.settings.polymarketKeyId,
+        secretKey: this.settings.polymarketSecretKey,
+      });
+    }
+    return this.client;
   }
 }
 
@@ -76,7 +84,7 @@ function toCreateParams(order: BetOrder) {
 }
 
 function mapTradingError(error: unknown, fallback: string): Error {
-  if (error instanceof TradingCredentialsMissingError) {
+  if (error instanceof AppError) {
     return error;
   }
   const message = error instanceof Error ? error.message : fallback;

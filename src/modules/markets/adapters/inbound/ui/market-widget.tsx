@@ -5,9 +5,10 @@ import type { Market } from "@/modules/markets/domain/market";
 import type { OrderBook } from "@/modules/markets/domain/order-book";
 import type { Prediction } from "@/modules/predictions/domain/prediction";
 import type { OrderPreview, PlacedOrder } from "@/modules/trading/application/ports/trading-gateway";
-import { OutcomeSide } from "@/modules/trading/domain/order";
+import { OutcomeSide } from "@/modules/shared/domain/outcome";
 import {
   apiRequest,
+  formatApiError,
   type MarketDetailsResponse,
   type PlaceResponse,
   type PreviewResponse,
@@ -45,7 +46,12 @@ export function MarketWidget() {
 
     apiRequest<SearchResponse>("/api/markets/search?q=&limit=20")
       .then((data) => setMarkets(data.markets))
-      .catch(() => undefined);
+      .catch((err) => {
+        setError(
+          formatApiError(err) ||
+            "Could not load markets. Connect to a VPN if Polymarket US is blocked in your region.",
+        );
+      });
   }, []);
 
   const search = useCallback(async (event?: FormEvent) => {
@@ -62,7 +68,7 @@ export function MarketWidget() {
         setBook(null);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Search failed");
+      setError(formatApiError(err) || "Search failed");
     } finally {
       setBusy(null);
     }
@@ -85,7 +91,7 @@ export function MarketWidget() {
         setLimitPrice(data.book.asks[0].price);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load market");
+      setError(formatApiError(err) || "Failed to load market");
     } finally {
       setBusy(null);
     }
@@ -96,13 +102,18 @@ export function MarketWidget() {
       setError("Select a market first");
       return;
     }
+    const qty = Number(quantity);
+    if (!Number.isInteger(qty) || qty < 1) {
+      setError("Quantity must be a whole number of at least 1");
+      return;
+    }
     setError(null);
     setBusy(mode);
     try {
       const payload = {
         marketSlug: selected.slug,
         outcome,
-        quantity: Number(quantity),
+        quantity: qty,
         limitPrice,
       };
       if (mode === "preview") {
@@ -120,7 +131,7 @@ export function MarketWidget() {
         setPlaced(data.order);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Order request failed");
+      setError(formatApiError(err) || "Order request failed");
     } finally {
       setBusy(null);
     }
@@ -146,7 +157,7 @@ export function MarketWidget() {
         setLimitPrice(data.prediction.suggestedLimitPrice);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Prediction failed");
+      setError(formatApiError(err) || "Prediction failed");
     } finally {
       setBusy(null);
     }
@@ -264,7 +275,9 @@ export function MarketWidget() {
                 <input
                   value={quantity}
                   onChange={(event) => setQuantity(event.target.value)}
-                  inputMode="numeric"
+                  type="number"
+                  min={1}
+                  step={1}
                   className="mt-1 h-11 w-full rounded-xl border border-zinc-300 bg-transparent px-3 text-sm dark:border-zinc-700"
                 />
               </label>
@@ -280,10 +293,10 @@ export function MarketWidget() {
             <div className="mt-4 flex flex-col gap-2 sm:flex-row">
               <button
                 type="button"
-                disabled={hydrated && (selected === null || busy === "preview")}
+                disabled={!hydrated || selected === null || busy === "preview"}
                 onClick={() => submitOrder("preview")}
                 className={`h-11 flex-1 rounded-xl border border-zinc-300 text-sm font-medium dark:border-zinc-700 ${
-                  selected === null || busy === "preview"
+                  !hydrated || selected === null || busy === "preview"
                     ? "cursor-not-allowed pointer-events-none opacity-60"
                     : "cursor-pointer"
                 }`}
@@ -292,10 +305,10 @@ export function MarketWidget() {
               </button>
               <button
                 type="button"
-                disabled={hydrated && (selected === null || busy === "place")}
+                disabled={!hydrated || selected === null || busy === "place"}
                 onClick={() => submitOrder("place")}
                 className={`h-11 flex-1 rounded-xl bg-emerald-600 text-sm font-medium text-white ${
-                  selected === null || busy === "place"
+                  !hydrated || selected === null || busy === "place"
                     ? "cursor-not-allowed pointer-events-none opacity-60"
                     : "cursor-pointer"
                 }`}

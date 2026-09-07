@@ -114,7 +114,7 @@ npm run build     # production build
   4. Place order (success + missing credentials)
   5. AI prediction (OpenAI path, Anthropic fallback, missing credentials)
 
-CI never uses live keys. Trading success tests inject a synthetic 32-byte secret so the SDK can sign; MSW never forwards that request.
+Tests never use live keys. Trading success tests inject a synthetic 32-byte secret so the SDK can sign; MSW never forwards that request.
 
 ## HTTP surface
 

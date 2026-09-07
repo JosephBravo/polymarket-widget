@@ -1,15 +1,15 @@
 import type { PlacedOrder, TradingGateway } from "@/modules/trading/application/ports/trading-gateway";
 import {
-  toBetOrder,
-  type PreviewOrderRequest,
-} from "@/modules/trading/application/use-cases/preview-order";
+  betOrderFromRequest,
+  type BetOrderRequest,
+} from "@/modules/trading/domain/order";
 
-export type PlaceOrderRequest = PreviewOrderRequest;
+export type PlaceOrderRequest = BetOrderRequest;
 
 export class PlaceOrder {
   constructor(private readonly trading: TradingGateway) {}
 
   async execute(request: PlaceOrderRequest): Promise<PlacedOrder> {
-    return this.trading.place(toBetOrder(request));
+    return this.trading.place(betOrderFromRequest(request));
   }
 }

@@ -6,7 +6,7 @@ import {
   type MarketBook,
   type MarketDetail,
 } from "polymarket-us";
-import { ExternalServiceError, NotFoundError } from "@/modules/shared/domain/errors";
+import { AppError, ExternalServiceError, NotFoundError } from "@/modules/shared/domain/errors";
 import { parseMarketSlug, type MarketSlug } from "@/modules/shared/domain/market-slug";
 import type { Market } from "@/modules/markets/domain/market";
 import type { OrderBook } from "@/modules/markets/domain/order-book";
@@ -122,10 +122,7 @@ function toOrderBook(
 }
 
 function mapCatalogError(error: unknown, fallback: string): Error {
-  if (
-    error instanceof NotFoundError ||
-    error instanceof ExternalServiceError
-  ) {
+  if (error instanceof AppError) {
     return error;
   }
   const message = error instanceof Error ? error.message : fallback;

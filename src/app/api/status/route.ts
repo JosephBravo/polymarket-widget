@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
-import { createContainer } from "@/composition/container";
+import { jsonError } from "@/modules/shared/adapters/inbound/http/json-error";
+import { getContainer } from "@/composition/container";
 
 export async function GET() {
-  const { settings } = createContainer();
-  return NextResponse.json({
-    tradingConfigured: settings.hasTradingCredentials,
-    aiConfigured: settings.hasOpenAi || settings.hasAnthropic,
-  });
+  try {
+    const { settings } = getContainer();
+    return NextResponse.json({
+      tradingConfigured: settings.hasTradingCredentials,
+      aiConfigured: settings.hasOpenAi || settings.hasAnthropic,
+    });
+  } catch (error) {
+    return jsonError(error);
+  }
 }
