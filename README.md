@@ -35,6 +35,8 @@ Public market data does not need credentials. Placing a bet needs Polymarket US 
 
 ## Architecture
 
+The app follows **hexagonal (ports & adapters) architecture**: business rules live in the center, and infrastructure (Polymarket SDK, LLMs, HTTP, React) plugs in through interfaces. Three bounded contexts—`markets`, `trading`, and `predictions`—each own their domain models and use cases. Shared value objects (`Price`, `OutcomeSide`, slugs) and HTTP helpers sit in `shared`. [`src/composition/container.ts`](src/composition/container.ts) wires adapters to use cases once per process; route handlers stay thin and never import SDKs directly, so API keys stay server-side.
+
 Dependency rule: **domain ← application ← adapters**. Route handlers and React components never call Polymarket or an LLM directly.
 
 ```text
