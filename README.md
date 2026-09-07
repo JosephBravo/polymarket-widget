@@ -4,10 +4,20 @@ Single-page widget for [Polymarket US](https://docs.polymarket.us/getting-starte
 
 ## What you can do
 
-1. Search Polymarket US markets (or load active markets with an empty query).
-2. Open a market and read bids/asks plus best bid/offer.
-3. Preview and place a GTC limit order (`BUY_LONG` = YES, `BUY_SHORT` = NO).
-4. Bonus: describe what you want to bet on; AI picks a candidate market, YES/NO, confidence, rationale, and a suggested limit price. The form is filled for you.
+**Discover**
+
+- 🔍 Search Polymarket US markets, or load active markets with an empty query
+- 📊 Open a market and read bids, asks, and best bid/offer
+
+**Trade**
+
+- 📝 Preview a GTC limit order before you submit
+- ✅ Place a YES (`BUY_LONG`) or NO (`BUY_SHORT`) bet
+
+**Predict**
+
+- 🤖 Describe what you want to bet on; AI picks a market, YES/NO, confidence, rationale, and a suggested limit price
+- 🧩 The form is filled for you so you can preview or place the bet
 
 Public market data does not need credentials. Placing a bet needs Polymarket US API keys. AI assist needs an OpenAI or Anthropic key.
 
@@ -46,7 +56,7 @@ Widget UI  →  Next.js route handlers  →  use cases  →  ports
 
 Bounded contexts: `markets` (search + book), `trading` (preview + place), `predictions` (AI).
 
-## Credentials (environment variables only)
+## 🔐 Credentials
 
 No API keys are hardcoded. Copy `.env.example` to `.env.local` and fill values locally. `.env*` files (except `.env.example`) are gitignored.
 
@@ -73,11 +83,11 @@ If trading keys are missing, search and AI still work; place/preview return `TRA
 
 `GET /api/status` only returns booleans (`tradingConfigured`, `aiConfigured`). It never echoes secrets.
 
-## VPN
+## 🛡️ VPN
 
-Polymarket US may be geo-restricted. If public requests fail from your region, connect through a VPN and retry.
+Polymarket US may be geo-restricted. If public requests fail from your region, connect through a VPN and retry. The widget also shows a short VPN notice on load.
 
-## Run locally
+## ▶️ Run locally
 
 Requires **Node.js 18+**.
 
@@ -94,7 +104,7 @@ npm test          # unit + integration
 npm run build     # production build
 ```
 
-## Tests
+## 🧪 Tests
 
 - **Unit** (`tests/unit`): slug/price/quantity rules and use cases with mocked ports.
 - **Integration** (`tests/integration`): one suite per integrated process, hitting route handlers while MSW stubs Polymarket US, OpenAI, and Anthropic:
