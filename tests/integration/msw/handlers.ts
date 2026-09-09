@@ -25,8 +25,13 @@ export const sampleBbo = {
 };
 
 export const handlers = [
-  http.get("https://gateway.polymarket.us/v1/search", () =>
-    HttpResponse.json({
+  http.get("https://gateway.polymarket.us/v1/search", ({ request }) => {
+    const url = new URL(request.url);
+    const query = url.searchParams.get("query") ?? "";
+    if (query === "100k") {
+      return HttpResponse.json({ events: [] });
+    }
+    return HttpResponse.json({
       events: [
         {
           id: 123,
@@ -39,8 +44,8 @@ export const handlers = [
           markets: [sampleMarket],
         },
       ],
-    }),
-  ),
+    });
+  }),
   http.get("https://gateway.polymarket.us/v1/markets", () =>
     HttpResponse.json({ markets: [sampleMarket] }),
   ),

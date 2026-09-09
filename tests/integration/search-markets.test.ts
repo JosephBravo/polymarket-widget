@@ -32,4 +32,18 @@ describe("search markets integration", () => {
     const body = await response.json();
     expect(body.markets[0].slug).toBe("btc-100k-2025");
   });
+
+  it("falls back to list and filter when search returns no events", async () => {
+    const response = await searchMarkets(
+      new Request("http://localhost/api/markets/search?q=100k&limit=10"),
+    );
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.markets).toEqual([
+      expect.objectContaining({
+        slug: "btc-100k-2025",
+        title: "Will Bitcoin reach $100k?",
+      }),
+    ]);
+  });
 });
