@@ -34,16 +34,12 @@ export function MarketWidget() {
   const [prediction, setPrediction] = useState<Prediction | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [hydrated, setHydrated] = useState(false);
-
-  useEffect(() => {
-    setHydrated(true);
-  }, []);
+  const [marketsLoading, setMarketsLoading] = useState(true);
 
   useEffect(() => {
     apiRequest<StatusResponse>("/api/status")
       .then(setStatus)
-      .catch(() => setStatus({ tradingConfigured: false, aiConfigured: false }));
+      .catch(() => setStatus(null));
 
     apiRequest<SearchResponse>("/api/markets/search?q=&limit=20")
       .then((data) => setMarkets(data.markets))
@@ -52,7 +48,8 @@ export function MarketWidget() {
           formatApiError(err) ||
             "Could not load markets. Connect to a VPN if Polymarket US is blocked in your region.",
         );
-      });
+      })
+      .finally(() => setMarketsLoading(false));
   }, []);
 
   const search = useCallback(async (event?: FormEvent) => {
@@ -75,28 +72,38 @@ export function MarketWidget() {
     }
   }, [query]);
 
-  const selectMarket = useCallback(async (market: Market) => {
-    setError(null);
-    setPreview(null);
-    setPlaced(null);
-    setBusy("market");
-    try {
-      const data = await apiRequest<MarketDetailsResponse>(
-        `/api/markets/${encodeURIComponent(market.slug)}`,
-      );
-      setSelected(data.market);
-      setBook(data.book);
-      if (data.book.bestAsk) {
-        setLimitPrice(data.book.bestAsk);
-      } else if (data.book.asks[0]) {
-        setLimitPrice(data.book.asks[0].price);
+  const selectMarket = useCallback(
+    async (market: Market, options?: { manageBusy?: boolean }) => {
+      const manageBusy = options?.manageBusy ?? true;
+      setError(null);
+      setPreview(null);
+      setPlaced(null);
+      setSelected(market);
+      setBook(null);
+      if (manageBusy) {
+        setBusy("market");
       }
-    } catch (err) {
-      setError(formatApiError(err) || "Failed to load market");
-    } finally {
-      setBusy(null);
-    }
-  }, []);
+      try {
+        const data = await apiRequest<MarketDetailsResponse>(
+          `/api/markets/${encodeURIComponent(market.slug)}`,
+        );
+        setSelected(data.market);
+        setBook(data.book);
+        if (data.book.bestAsk) {
+          setLimitPrice(data.book.bestAsk);
+        } else if (data.book.asks[0]) {
+          setLimitPrice(data.book.asks[0].price);
+        }
+      } catch (err) {
+        setError(formatApiError(err) || "Failed to load market");
+      } finally {
+        if (manageBusy) {
+          setBusy(null);
+        }
+      }
+    },
+    [],
+  );
 
   const submitOrder = useCallback(async (mode: "preview" | "place") => {
     if (!selected) {
@@ -153,7 +160,7 @@ export function MarketWidget() {
         (market) => market.slug === data.prediction.marketSlug,
       );
       if (match) {
-        await selectMarket(match);
+        await selectMarket(match, { manageBusy: false });
         setOutcome(data.prediction.outcome);
         setLimitPrice(data.prediction.suggestedLimitPrice);
       }
@@ -163,6 +170,8 @@ export function MarketWidget() {
       setBusy(null);
     }
   }, [aiPrompt, query, selectMarket]);
+
+  const orderBusy = busy === "preview" || busy === "place";
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8">
@@ -214,7 +223,11 @@ export function MarketWidget() {
           </form>
 
           <div className="flex max-h-[28rem] flex-col gap-2 overflow-auto pr-1">
-            {markets.length === 0 ? (
+            {marketsLoading ? (
+              <p className="px-1 py-8 text-center text-sm text-zinc-500">
+                Loading markets…
+              </p>
+            ) : markets.length === 0 ? (
               <p className="px-1 py-8 text-center text-sm text-zinc-500">
                 Search for a topic or leave the box empty to load active markets.
               </p>
@@ -297,15 +310,13 @@ export function MarketWidget() {
             <div className="mt-4 flex flex-col gap-2 sm:flex-row">
               <TradeButton
                 label={busy === "preview" ? "Previewing…" : "Preview"}
-                hydrated={hydrated}
-                blocked={selected === null || busy === "preview"}
+                blocked={selected === null || book === null || orderBusy}
                 onClick={() => submitOrder("preview")}
                 variant="outline"
               />
               <TradeButton
                 label={busy === "place" ? "Placing…" : "Place bet"}
-                hydrated={hydrated}
-                blocked={selected === null || busy === "place"}
+                blocked={selected === null || book === null || orderBusy}
                 onClick={() => submitOrder("place")}
                 variant="primary"
               />
@@ -366,38 +377,27 @@ export function MarketWidget() {
 
 function TradeButton({
   label,
-  hydrated,
   blocked,
   onClick,
   variant,
 }: {
   label: string;
-  hydrated: boolean;
   blocked: boolean;
   onClick: () => void;
   variant: "outline" | "primary";
 }) {
-  const inactive = !hydrated || blocked;
-
   return (
     <button
       type="button"
-      disabled={hydrated && blocked}
-      aria-disabled={inactive}
-      tabIndex={inactive ? -1 : undefined}
-      onClick={() => {
-        if (inactive) {
-          return;
-        }
-        onClick();
-      }}
+      disabled={blocked}
+      onClick={onClick}
       className={`h-11 flex-1 rounded-xl text-sm font-medium ${
         variant === "primary"
           ? "bg-emerald-600 text-white"
           : "border border-zinc-300 dark:border-zinc-700"
       } ${
-        inactive
-          ? "cursor-not-allowed pointer-events-none opacity-60"
+        blocked
+          ? "cursor-not-allowed opacity-60"
           : "cursor-pointer"
       }`}
     >
@@ -409,22 +409,50 @@ function TradeButton({
 function StatusPills({ status }: { status: StatusResponse | null }) {
   return (
     <div className="flex flex-wrap gap-2">
-      <Pill ok={Boolean(status?.tradingConfigured)} label="Trading keys" />
-      <Pill ok={Boolean(status?.aiConfigured)} label="AI keys" />
+      <Pill
+        label="Trading keys"
+        state={
+          status === null
+            ? "checking"
+            : status.tradingConfigured
+              ? "ready"
+              : "missing"
+        }
+      />
+      <Pill
+        label="AI keys"
+        state={
+          status === null
+            ? "checking"
+            : status.aiConfigured
+              ? "ready"
+              : "missing"
+        }
+      />
     </div>
   );
 }
 
-function Pill({ ok, label }: { ok: boolean; label: string }) {
+function Pill({
+  label,
+  state,
+}: {
+  label: string;
+  state: "checking" | "ready" | "missing";
+}) {
+  const className =
+    state === "ready"
+      ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
+      : state === "checking"
+        ? "bg-zinc-100 text-zinc-500 dark:bg-zinc-900 dark:text-zinc-500"
+        : "bg-zinc-100 text-zinc-600 dark:bg-zinc-900 dark:text-zinc-400";
+
+  const text =
+    state === "ready" ? "ready" : state === "checking" ? "checking…" : "missing";
+
   return (
-    <span
-      className={`rounded-full px-3 py-1 text-xs font-medium ${
-        ok
-          ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
-          : "bg-zinc-100 text-zinc-600 dark:bg-zinc-900 dark:text-zinc-400"
-      }`}
-    >
-      {label}: {ok ? "ready" : "missing"}
+    <span className={`rounded-full px-3 py-1 text-xs font-medium ${className}`}>
+      {label}: {text}
     </span>
   );
 }

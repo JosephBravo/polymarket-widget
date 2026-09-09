@@ -39,7 +39,16 @@ export async function apiRequest<T>(url: string, init?: RequestInit): Promise<T>
       ...(init?.headers ?? {}),
     },
   });
-  const body = (await response.json()) as T & ApiErrorBody;
+
+  let body: T & ApiErrorBody;
+  try {
+    body = (await response.json()) as T & ApiErrorBody;
+  } catch {
+    throw new ApiError(
+      response.ok ? "Invalid response from server" : `Request failed (${response.status})`,
+    );
+  }
+
   if (!response.ok) {
     throw new ApiError(body.error?.message ?? "Request failed", body.error?.code);
   }
@@ -55,6 +64,9 @@ export function formatApiError(err: unknown): string {
       return "AI credentials missing. Set OPENAI_API_KEY or ANTHROPIC_API_KEY in .env.";
     }
     return err.message;
+  }
+  if (err instanceof TypeError && err.message === "Failed to fetch") {
+    return "Network request failed. Connect to a VPN if Polymarket US is blocked in your region.";
   }
   return err instanceof Error ? err.message : "Request failed";
 }
