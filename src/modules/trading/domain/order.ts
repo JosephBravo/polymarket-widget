@@ -21,10 +21,6 @@ export function intentFromOutcome(side: OutcomeSideType): OrderIntent {
   return side === OutcomeSide.YES ? OrderIntent.BUY_LONG : OrderIntent.BUY_SHORT;
 }
 
-export function outcomeFromIntent(intent: OrderIntent): OutcomeSideType {
-  return intent === OrderIntent.BUY_LONG ? OutcomeSide.YES : OutcomeSide.NO;
-}
-
 export type BetOrder = {
   marketSlug: MarketSlug;
   intent: OrderIntent;
@@ -40,8 +36,8 @@ export type BetOrderRequest = {
 };
 
 export function parseQuantity(value: number): number {
-  if (!Number.isInteger(value) || value < 1) {
-    throw new ValidationError("Quantity must be a whole number of at least 1");
+  if (!Number.isInteger(value) || value < 1 || value > 10_000) {
+    throw new ValidationError("Quantity must be a whole number between 1 and 10000");
   }
   return value;
 }

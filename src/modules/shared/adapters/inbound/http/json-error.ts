@@ -9,9 +9,9 @@ export function jsonError(error: unknown): NextResponse {
     );
   }
 
-  const message = error instanceof Error ? error.message : "Unexpected error";
+  console.error(error);
   return NextResponse.json(
-    { error: { code: "INTERNAL_ERROR", message } },
+    { error: { code: "INTERNAL_ERROR", message: "Unexpected error" } },
     { status: 500 },
   );
 }

@@ -44,6 +44,19 @@ describe("API validation integration", () => {
     const body = await response.json();
     expect(body.error.code).toBe("VALIDATION_ERROR");
   });
+
+  it("returns 400 when quantity is a boolean", async () => {
+    setTradingEnv();
+    const response = await placeOrder(
+      new Request("http://localhost/api/orders", {
+        method: "POST",
+        body: JSON.stringify({ ...validPayload, quantity: true }),
+      }),
+    );
+    expect(response.status).toBe(400);
+    const body = await response.json();
+    expect(body.error.code).toBe("VALIDATION_ERROR");
+  });
 });
 
 describe("status integration", () => {

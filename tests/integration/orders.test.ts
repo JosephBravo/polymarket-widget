@@ -31,6 +31,18 @@ describe("preview order integration", () => {
     expect(body.preview.estimatedCost).toBe("1.10");
     expect(body.preview.quantity).toBe(2);
   });
+
+  it("fails clearly when trading credentials are missing", async () => {
+    const response = await previewOrder(
+      new Request("http://localhost/api/orders/preview", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }),
+    );
+    expect(response.status).toBe(401);
+    const body = await response.json();
+    expect(body.error.code).toBe("TRADING_CREDENTIALS_MISSING");
+  });
 });
 
 describe("place order integration", () => {

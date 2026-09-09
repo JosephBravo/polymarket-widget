@@ -125,6 +125,6 @@ function mapCatalogError(error: unknown, fallback: string): Error {
   if (error instanceof AppError) {
     return error;
   }
-  const message = error instanceof Error ? error.message : fallback;
-  return new ExternalServiceError(message);
+  console.error(fallback, error);
+  return new ExternalServiceError(fallback);
 }

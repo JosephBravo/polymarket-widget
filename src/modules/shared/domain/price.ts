@@ -1,6 +1,6 @@
 import { ValidationError } from "./errors";
 
-const PRICE_PATTERN = /^(0(\.\d{1,4})?|1(\.0{1,4})?)$/;
+export const PRICE_PATTERN = /^(0(\.\d{1,4})?|1(\.0{1,4})?)$/;
 
 export class Price {
   private constructor(readonly value: string) {}
