@@ -386,17 +386,32 @@ function TradeButton({
   onClick: () => void;
   variant: "outline" | "primary";
 }) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const inactive = !mounted || blocked;
+
   return (
     <button
       type="button"
-      disabled={blocked}
-      onClick={onClick}
+      disabled={mounted && blocked}
+      aria-disabled={inactive}
+      tabIndex={inactive ? -1 : undefined}
+      onClick={() => {
+        if (inactive) {
+          return;
+        }
+        onClick();
+      }}
       className={`h-11 flex-1 rounded-xl text-sm font-medium ${
         variant === "primary"
           ? "bg-emerald-600 text-white"
           : "border border-zinc-300 dark:border-zinc-700"
       } ${
-        blocked
+        inactive
           ? "cursor-not-allowed opacity-60"
           : "cursor-pointer"
       }`}
