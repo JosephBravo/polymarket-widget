@@ -2,22 +2,12 @@
 
 import { useEffect, useState } from "react";
 
-const STORAGE_KEY = "polymarket-widget-vpn-notice-dismissed";
-
 export function VpnNotice() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    if (sessionStorage.getItem(STORAGE_KEY) === "1") {
-      return;
-    }
     setVisible(true);
   }, []);
-
-  const dismiss = () => {
-    sessionStorage.setItem(STORAGE_KEY, "1");
-    setVisible(false);
-  };
 
   if (!visible) {
     return null;
@@ -43,7 +33,7 @@ export function VpnNotice() {
         <button
           type="button"
           aria-label="Dismiss VPN notice"
-          onClick={dismiss}
+          onClick={() => setVisible(false)}
           className="shrink-0 cursor-pointer rounded-lg px-2 py-1 text-xs font-medium text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
         >
           Dismiss
