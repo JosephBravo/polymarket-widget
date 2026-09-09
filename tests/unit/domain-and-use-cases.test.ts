@@ -5,6 +5,7 @@ import { loadSettings } from "@/modules/shared/application/settings";
 import {
   OrderIntent,
   OutcomeSide,
+  betOrderFromRequest,
   intentFromOutcome,
   parseQuantity,
 } from "@/modules/trading/domain/order";
@@ -22,6 +23,25 @@ describe("domain", () => {
     expect(() => parseQuantity(0)).toThrow();
     expect(intentFromOutcome(OutcomeSide.YES)).toBe(OrderIntent.BUY_LONG);
     expect(intentFromOutcome(OutcomeSide.NO)).toBe(OrderIntent.BUY_SHORT);
+  });
+
+  it("builds bet orders from requests and rejects invalid slugs", () => {
+    const order = betOrderFromRequest({
+      marketSlug: "btc-100k-2025",
+      outcome: OutcomeSide.YES,
+      quantity: 2,
+      limitPrice: "0.55",
+    });
+    expect(order.marketSlug).toBe("btc-100k-2025");
+    expect(order.quantity).toBe(2);
+    expect(() =>
+      betOrderFromRequest({
+        marketSlug: "!!!",
+        outcome: OutcomeSide.YES,
+        quantity: 1,
+        limitPrice: "0.50",
+      }),
+    ).toThrow("Market slug is invalid");
   });
 
   it("loads settings from the environment without defaults", () => {

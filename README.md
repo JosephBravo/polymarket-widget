@@ -85,6 +85,10 @@ If trading keys are missing, search and AI still work; place/preview return `TRA
 
 `GET /api/status` only returns booleans (`tradingConfigured`, `aiConfigured`). It never echoes secrets.
 
+## Deploy note
+
+This widget is built for local or trusted use. `POST /api/orders`, `/api/orders/preview`, and `/api/predictions` run on the server with your env keys—anyone who can reach a public deployment can trigger trading or LLM usage. Do not expose it without authentication or network restrictions.
+
 ## 🛡️ VPN
 
 Polymarket US may be geo-restricted. If public requests fail from your region, connect through a VPN and retry. The widget also shows a short VPN notice on load.
@@ -108,13 +112,15 @@ npm run build     # production build
 
 ## 🧪 Tests
 
-- **Unit** (`tests/unit`): slug/price/quantity rules and use cases with mocked ports.
+- **Unit** (`tests/unit`): a small set of domain rules and use-case tests with mocked ports (most confidence comes from integration tests below).
 - **Integration** (`tests/integration`): one suite per integrated process, hitting route handlers while MSW stubs Polymarket US, OpenAI, and Anthropic:
   1. Search markets
-  2. Load market + book
-  3. Preview order
+  2. Load market + book (including 404)
+  3. Preview order (success + missing credentials)
   4. Place order (success + missing credentials)
   5. AI prediction (OpenAI path, Anthropic fallback, missing credentials)
+  6. API validation (malformed JSON, invalid price, boolean quantity)
+  7. Status endpoint
 
 Tests never use live keys. Trading success tests inject a synthetic 32-byte secret so the SDK can sign; MSW never forwards that request.
 

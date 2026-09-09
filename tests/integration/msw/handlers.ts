@@ -47,6 +47,9 @@ export const handlers = [
   http.get("https://gateway.polymarket.us/v1/market/slug/btc-100k-2025", () =>
     HttpResponse.json({ market: sampleMarket }),
   ),
+  http.get("https://gateway.polymarket.us/v1/market/slug/unknown-market", () =>
+    HttpResponse.json({ message: "not found" }, { status: 404 }),
+  ),
   http.get("https://gateway.polymarket.us/v1/markets/btc-100k-2025/book", () =>
     HttpResponse.json(sampleBook),
   ),

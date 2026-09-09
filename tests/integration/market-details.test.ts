@@ -22,4 +22,14 @@ describe("load market details integration", () => {
     expect(body.book.bestAsk).toBe("0.56");
     expect(body.book.asks[0]).toEqual({ price: "0.56", size: "12" });
   });
+
+  it("returns 404 for an unknown market slug", async () => {
+    const response = await getMarket(
+      new Request("http://localhost/api/markets/unknown-market"),
+      { params: Promise.resolve({ slug: "unknown-market" }) },
+    );
+    expect(response.status).toBe(404);
+    const body = await response.json();
+    expect(body.error.code).toBe("NOT_FOUND");
+  });
 });
