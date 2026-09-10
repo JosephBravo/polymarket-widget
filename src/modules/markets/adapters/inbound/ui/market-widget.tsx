@@ -1,6 +1,7 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import type { Market } from "@/modules/markets/domain/market";
 import type { OrderBook } from "@/modules/markets/domain/order-book";
 import type { Prediction } from "@/modules/predictions/domain/prediction";
@@ -17,9 +18,14 @@ import {
   type StatusResponse,
 } from "./api-client";
 import { VpnNotice } from "./vpn-notice";
+import { buildMarketShareUrl, MARKET_QUERY_PARAM } from "./market-url";
 import { ThemeToggle } from "@/modules/shared/adapters/inbound/ui/theme-toggle";
+import type { MarketSlug } from "@/modules/shared/domain/market-slug";
 
 export function MarketWidget() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const deepLinkHandled = useRef(false);
   const [status, setStatus] = useState<StatusResponse | null>(null);
   const [query, setQuery] = useState("");
   const [markets, setMarkets] = useState<Market[]>([]);
@@ -94,6 +100,13 @@ export function MarketWidget() {
         } else if (data.book.asks[0]) {
           setLimitPrice(data.book.asks[0].price);
         }
+        const currentSlug = searchParams.get(MARKET_QUERY_PARAM);
+        if (currentSlug !== data.market.slug) {
+          router.replace(
+            `/?${MARKET_QUERY_PARAM}=${encodeURIComponent(data.market.slug)}`,
+            { scroll: false },
+          );
+        }
       } catch (err) {
         setError(formatApiError(err) || "Failed to load market");
       } finally {
@@ -102,8 +115,24 @@ export function MarketWidget() {
         }
       }
     },
-    [],
+    [router, searchParams],
   );
+
+  useEffect(() => {
+    const slug = searchParams.get(MARKET_QUERY_PARAM);
+    if (!slug || deepLinkHandled.current) {
+      return;
+    }
+    deepLinkHandled.current = true;
+    const stub: Market = {
+      slug: slug as MarketSlug,
+      title: slug,
+      outcome: "",
+      active: true,
+      closed: false,
+    };
+    void selectMarket(stub);
+  }, [searchParams, selectMarket]);
 
   const submitOrder = useCallback(async (mode: "preview" | "place") => {
     if (!selected) {
@@ -258,8 +287,13 @@ export function MarketWidget() {
           <section className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-950 sm:p-5">
             {selected && book ? (
               <>
-                <h2 className="text-lg font-semibold">{selected.title}</h2>
-                <p className="mt-1 text-sm text-zinc-500">{selected.outcome}</p>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h2 className="text-lg font-semibold">{selected.title}</h2>
+                    <p className="mt-1 text-sm text-zinc-500">{selected.outcome}</p>
+                  </div>
+                  <CopyMarketLink slug={selected.slug} />
+                </div>
                 <BookTable book={book} />
               </>
             ) : (
@@ -372,6 +406,29 @@ export function MarketWidget() {
         </div>
       </div>
     </div>
+  );
+}
+
+function CopyMarketLink({ slug }: { slug: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const copyLink = async () => {
+    await navigator.clipboard.writeText(
+      buildMarketShareUrl(slug, window.location.origin),
+    );
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={() => void copyLink()}
+      aria-label="Copy market link"
+      className="shrink-0 cursor-pointer rounded-lg border border-zinc-300 px-2.5 py-1 text-xs font-medium text-zinc-600 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+    >
+      {copied ? "Copied!" : "Copy link"}
+    </button>
   );
 }
 
