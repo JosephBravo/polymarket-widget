@@ -6,6 +6,10 @@ import type { Market } from "@/modules/markets/domain/market";
 import type { OrderBook } from "@/modules/markets/domain/order-book";
 import type { Prediction } from "@/modules/predictions/domain/prediction";
 import type { OrderPreview, PlacedOrder } from "@/modules/trading/application/ports/trading-gateway";
+import {
+  computeSpread,
+  estimateMaxOrderCost,
+} from "@/modules/trading/domain/order-estimate";
 import { OutcomeSide } from "@/modules/shared/domain/outcome";
 import {
   apiRequest,
@@ -201,6 +205,11 @@ export function MarketWidget() {
   }, [aiPrompt, query, selectMarket]);
 
   const orderBusy = busy === "preview" || busy === "place";
+  const parsedQuantity = Number(quantity);
+  const estimatedMaxCost = estimateMaxOrderCost(
+    Number.isFinite(parsedQuantity) ? parsedQuantity : NaN,
+    limitPrice,
+  );
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8">
@@ -333,7 +342,27 @@ export function MarketWidget() {
                 />
               </label>
               <label className="text-xs font-medium text-zinc-500">
-                Limit price (0–1)
+                <span className="flex items-center justify-between gap-2">
+                  Limit price (0–1)
+                  <span className="flex gap-1">
+                    <button
+                      type="button"
+                      disabled={!book?.bestBid}
+                      onClick={() => book?.bestBid && setLimitPrice(book.bestBid)}
+                      className="rounded-md px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-emerald-700 ring-1 ring-emerald-200 disabled:cursor-not-allowed disabled:opacity-40 dark:text-emerald-400 dark:ring-emerald-900"
+                    >
+                      Best bid
+                    </button>
+                    <button
+                      type="button"
+                      disabled={!book?.bestAsk}
+                      onClick={() => book?.bestAsk && setLimitPrice(book.bestAsk)}
+                      className="rounded-md px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-rose-700 ring-1 ring-rose-200 disabled:cursor-not-allowed disabled:opacity-40 dark:text-rose-400 dark:ring-rose-900"
+                    >
+                      Best ask
+                    </button>
+                  </span>
+                </span>
                 <input
                   value={limitPrice}
                   onChange={(event) => setLimitPrice(event.target.value)}
@@ -341,6 +370,10 @@ export function MarketWidget() {
                 />
               </label>
             </div>
+            <p className="mt-2 text-xs text-zinc-500">
+              Est. max cost:{" "}
+              {estimatedMaxCost ? `$${estimatedMaxCost}` : "—"}
+            </p>
             <div className="mt-4 flex flex-col gap-2 sm:flex-row">
               <TradeButton
                 label={busy === "preview" ? "Previewing…" : "Preview"}
@@ -561,12 +594,14 @@ function OutcomeButton({
 function BookTable({ book }: { book: OrderBook }) {
   const rows = Math.max(book.bids.length, book.asks.length, 1);
   const visible = Math.min(rows, 6);
+  const spread = computeSpread(book.bestBid, book.bestAsk);
 
   return (
     <div className="mt-4 overflow-x-auto">
-      <div className="mb-2 flex gap-4 text-xs text-zinc-500">
+      <div className="mb-2 flex flex-wrap gap-4 text-xs text-zinc-500">
         <span>Best bid {book.bestBid ?? "—"}</span>
         <span>Best ask {book.bestAsk ?? "—"}</span>
+        {spread ? <span>Spread {spread}</span> : null}
       </div>
       <table className="w-full text-left text-xs">
         <thead className="text-zinc-500">

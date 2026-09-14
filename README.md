@@ -13,6 +13,7 @@ Single-page widget for [Polymarket US](https://docs.polymarket.us/getting-starte
 
 - 📝 Preview a GTC limit order before you submit
 - ✅ Place a YES (`BUY_LONG`) or NO (`BUY_SHORT`) bet
+- 💵 See spread in the book, live max-cost estimate, and fill limit price from best bid/ask
 
 **Predict**
 
