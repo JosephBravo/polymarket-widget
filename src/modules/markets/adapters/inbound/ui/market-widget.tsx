@@ -24,7 +24,10 @@ import {
 import { VpnNotice } from "./vpn-notice";
 import { buildMarketShareUrl, MARKET_QUERY_PARAM } from "./market-url";
 import { ThemeToggle } from "@/modules/shared/adapters/inbound/ui/theme-toggle";
+import { useDebouncedValue } from "@/modules/shared/adapters/inbound/ui/use-debounced-value";
 import type { MarketSlug } from "@/modules/shared/domain/market-slug";
+
+const SEARCH_DEBOUNCE_MS = 300;
 
 export function MarketWidget() {
   const router = useRouter();
@@ -50,25 +53,14 @@ export function MarketWidget() {
     apiRequest<StatusResponse>("/api/status")
       .then(setStatus)
       .catch(() => setStatus(null));
-
-    apiRequest<SearchResponse>("/api/markets/search?q=&limit=20")
-      .then((data) => setMarkets(data.markets))
-      .catch((err) => {
-        setError(
-          formatApiError(err) ||
-            "Could not load markets. Connect to a VPN if Polymarket US is blocked in your region.",
-        );
-      })
-      .finally(() => setMarketsLoading(false));
   }, []);
 
-  const search = useCallback(async (event?: FormEvent) => {
-    event?.preventDefault();
+  const loadMarkets = useCallback(async (searchQuery: string) => {
     setError(null);
     setBusy("search");
     try {
       const data = await apiRequest<SearchResponse>(
-        `/api/markets/search?q=${encodeURIComponent(query)}&limit=20`,
+        `/api/markets/search?q=${encodeURIComponent(searchQuery)}&limit=20`,
       );
       setMarkets(data.markets);
       if (data.markets.length === 0) {
@@ -76,11 +68,32 @@ export function MarketWidget() {
         setBook(null);
       }
     } catch (err) {
-      setError(formatApiError(err) || "Search failed");
+      setError(
+        formatApiError(err) ||
+          (searchQuery === ""
+            ? "Could not load markets. Connect to a VPN if Polymarket US is blocked in your region."
+            : "Search failed"),
+      );
     } finally {
       setBusy(null);
+      setMarketsLoading(false);
     }
-  }, [query]);
+  }, []);
+
+  const debouncedQuery = useDebouncedValue(query, SEARCH_DEBOUNCE_MS);
+  const searchPending = query !== debouncedQuery;
+
+  useEffect(() => {
+    void loadMarkets(debouncedQuery);
+  }, [debouncedQuery, loadMarkets]);
+
+  const search = useCallback(
+    (event?: FormEvent) => {
+      event?.preventDefault();
+      void loadMarkets(query);
+    },
+    [query, loadMarkets],
+  );
 
   const selectMarket = useCallback(
     async (market: Market, options?: { manageBusy?: boolean }) => {
@@ -248,15 +261,15 @@ export function MarketWidget() {
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search markets (bitcoin, election, Super Bowl…)"
+              placeholder="Search markets — results update as you type"
               className="h-11 w-full rounded-xl border border-zinc-300 bg-transparent px-3 text-sm outline-none ring-emerald-500/40 focus:ring-2 dark:border-zinc-700"
             />
             <button
               type="submit"
-              disabled={busy === "search"}
+              disabled={busy === "search" || searchPending}
               className="h-11 shrink-0 cursor-pointer rounded-xl bg-zinc-900 px-4 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900"
             >
-              {busy === "search" ? "Searching…" : "Search"}
+              {busy === "search" || searchPending ? "Searching…" : "Search"}
             </button>
           </form>
 
