@@ -3,6 +3,7 @@
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { Market } from "@/modules/markets/domain/market";
+import { formatCompactUsd } from "@/modules/markets/domain/format-compact-usd";
 import type { OrderBook } from "@/modules/markets/domain/order-book";
 import type { Prediction } from "@/modules/predictions/domain/prediction";
 import type { OrderPreview, PlacedOrder } from "@/modules/trading/application/ports/trading-gateway";
@@ -299,6 +300,7 @@ export function MarketWidget() {
                     {market.outcome}
                     {market.eventTitle ? ` · ${market.eventTitle}` : ""}
                   </p>
+                  <MarketStats market={market} />
                 </button>
               ))
             )}
@@ -313,6 +315,7 @@ export function MarketWidget() {
                   <div>
                     <h2 className="text-lg font-semibold">{selected.title}</h2>
                     <p className="mt-1 text-sm text-zinc-500">{selected.outcome}</p>
+                    <MarketStats market={selected} />
                   </div>
                   <CopyMarketLink slug={selected.slug} />
                 </div>
@@ -453,6 +456,24 @@ export function MarketWidget() {
       </div>
     </div>
   );
+}
+
+function MarketStats({ market }: { market: Market }) {
+  const parts: string[] = [];
+  const volume = formatCompactUsd(market.volume);
+  const liquidity = formatCompactUsd(market.liquidity);
+
+  if (volume) {
+    parts.push(`Vol ${volume}`);
+  }
+  if (liquidity) {
+    parts.push(`Liq ${liquidity}`);
+  }
+  if (parts.length === 0) {
+    return null;
+  }
+
+  return <p className="mt-1 text-xs text-zinc-500">{parts.join(" · ")}</p>;
 }
 
 function CopyMarketLink({ slug }: { slug: string }) {

@@ -9,6 +9,7 @@ Single-page widget for [Polymarket US](https://docs.polymarket.us/getting-starte
 - 🔍 Search Polymarket US markets, or load active markets with an empty query
 - ⌨️ Results update automatically as you type (debounced search); Enter or Search runs immediately
 - 📊 Open a market and read bids, asks, and best bid/offer
+- 💵 See compact volume and liquidity on each market in the list and selected header
 
 **Trade**
 
